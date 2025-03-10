@@ -22,6 +22,10 @@
        WORKING-STORAGE SECTION.
        01 EOF-FLAG PIC x(1).
        01 USER-CHOICE PIC 9(1).
+       01 SEARCH-ID-PRODUCT PIC 9(5).
+       01 FOUND PIC 9(1).
+
+       01 NEW-QUANTITY PIC 9(4).
 
        PROCEDURE DIVISION.
        MAIN-PROGRAM.
@@ -44,6 +48,10 @@
        
                EVALUATE USER-CHOICE
                    WHEN 1 PERFORM VIEW-INVENTORY
+
+                   WHEN 2 PERFORM UPDATE-STOCK
+
+                   WHEN 3 PERFORM SEARCH-PRODUCT
                       
                    WHEN 4 PERFORM ADD-PRODUCT
        
@@ -56,6 +64,7 @@
            DISPLAY "============================================".
            DISPLAY "              --- INVENTORY ---             ".
            DISPLAY "============================================".
+      *    PRODUCT-ID | PRODUCT-NAME | QUANTITY | PRICE
            OPEN INPUT INVENTORY-FILE.
            PERFORM UNTIL EOF-FLAG = 'Y'
                READ INVENTORY-FILE INTO PRODUCT_RECORD
@@ -70,6 +79,71 @@
            MOVE 'N' TO EOF-FLAG.
            CLOSE INVENTORY-FILE.
         
+
+       UPDATE-STOCK.
+           DISPLAY "============================================".
+           DISPLAY "            --- UPDATE STOCK ---            ".
+           DISPLAY "============================================".
+
+           DISPLAY "Please enter the ID PRODUCT : " WITH NO ADVANCING.
+           ACCEPT SEARCH-ID-PRODUCT.
+           DISPLAY "Enter the new stock : " WITH NO ADVANCING.
+           ACCEPT NEW-QUANTITY.
+           
+           MOVE 0 TO FOUND.
+
+           OPEN INPUT INVENTORY-FILE.
+           PERFORM UNTIL EOF-FLAG = 'Y' OR FOUND = 1
+               READ INVENTORY-FILE INTO PRODUCT_RECORD
+                   AT END MOVE 'Y' TO EOF-FLAG
+               END-READ
+               
+               IF SEARCH-ID-PRODUCT = PRODUCT-ID
+                   MOVE NEW-QUANTITY TO PRODUCT-QUANTITY
+                   MOVE 1 TO FOUND
+                   DISPLAY "Stock has been updated"
+               END-IF
+           
+           END-PERFORM.
+
+           IF FOUND = 0
+               DISPLAY "The ID product is invalid."
+           END-IF.
+
+           CLOSE INVENTORY-FILE.
+       
+
+       SEARCH-PRODUCT.
+           DISPLAY "============================================".
+           DISPLAY "            --- SEARCH PRODUCT ---          ".
+           DISPLAY "============================================".
+
+           DISPLAY "Please enter the ID PRODUCT : " WITH NO ADVANCING.
+           ACCEPT SEARCH-ID-PRODUCT.
+
+           MOVE 0 TO FOUND. 
+
+           OPEN INPUT INVENTORY-FILE.
+           PERFORM UNTIL EOF-FLAG = 'Y' OR FOUND = 1
+               READ INVENTORY-FILE INTO PRODUCT_RECORD
+                   AT END MOVE 'Y' TO EOF-FLAG
+               END-READ
+
+               IF SEARCH-ID-PRODUCT = PRODUCT-ID
+                   DISPLAY "Found :"
+                   DISPLAY PRODUCT-ID SPACE PRODUCT-NAME SPACE 
+                   PRODUCT-QUANTITY SPACE PRODUCT-PRICE
+                   MOVE 1 TO FOUND
+
+               END-IF
+           
+           END-PERFORM.
+           
+           IF FOUND = 0
+               DISPLAY "The ID product is invalid."
+           END-IF.
+
+           CLOSE INVENTORY-FILE.
 
        ADD-PRODUCT.
            DISPLAY "============================================".
